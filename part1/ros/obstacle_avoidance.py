@@ -25,7 +25,55 @@ def braitenberg(front, front_left, front_right, left, right):
 
   # MISSING: Implement a braitenberg controller that takes the range
   # measurements given in argument to steer the robot.
+  sigmoid_n = lambda z : (1/(1+np.exp(-z)))-0.5#0.5 to have a range from -0..5 to 0.5
 
+  #print(front)#, front_left, front_right, left, right)
+ # u=np.tanh(front)
+  
+  rad=1
+  axl=1
+
+  #v_r=np.tanh(left)
+  #v_l=np.tanh(right)
+
+  #v_r=np.tanh(front)*0.5 + np.tanh(front_right)*0.25 + np.tanh(right)*0.25 
+  #v_l=np.tanh(front)*0.5 + np.tanh(front_left)*0.25 + np.tanh(left)*0.25    
+# 
+  # v_r=np.tanh(front-1)*0.15 + sigmoid_n(front_left)*0.45 + sigmoid_n(left)*0.25
+  # v_l=np.tanh(front-1)*0.15 + sigmoid_n(front_right)*0.45 + sigmoid_n(right)*0.25
+
+  front=round(front,4)
+  front=round(front,4)
+  front_left=round(front_left,4)
+  front_right=round(front_right,4)
+  left=round(left,4)
+  right=round(right,4)
+  
+
+  v_r=np.tanh(front-1)*0.33 + np.tanh(front_left-1)*0.33 + np.tanh(left-1)*0.33
+  v_l=np.tanh(front-1)*0.33 + np.tanh(front_right-1)*0.33 + np.tanh(right-1)*0.33
+
+  v_r=round(v_r,3)
+  v_l=round(v_l,3)
+  
+  coefs=np.array([[5,3,7],[1,2,5]])
+  dists=np.array([front, front_left, front_right, left,right]).reshape(5,1)
+  offsets=np.array([[-1],[-1]]).reshape(2,1)
+    
+  
+  ### ROTATIONAL VELOCITY ###
+  w=rad/axl*(v_r-v_l)
+
+    ### FORWARD VELOCITY ###
+ # OFFSET=0
+ # u=sigmoid_n(front)-OFFSET
+  u=(rad/2)*(v_r+v_l)
+
+  if(np.isnan(u)):
+    u=0
+
+ # print('u/w', u,w)
+  print('front d,v', front, u, 'right d v', right, v_r, 'left d v', left, v_l)
   return u, w
 
 
@@ -34,7 +82,42 @@ def rule_based(front, front_left, front_right, left, right):
   w = 0.  # [rad/s] going counter-clockwise.
 
   # MISSING: Implement a rule-based controller that avoids obstacles.
+  LIMIT=0.75
+  
+  REVERSE=-1
+  SPEED_SLOW=0.1
+  SPEED_NORMAL=0.5
+  SPEED_FAST=1
 
+  v_r=SPEED_NORMAL 
+  v_l=SPEED_NORMAL
+     
+  if(front<LIMIT):  
+     v_r=SPEED_FAST
+     v_l=REVERSE
+  elif (right<LIMIT):
+     v_r=SPEED_FAST
+     v_l=SPEED_SLOW
+  elif (left<LIMIT):
+     v_l=SPEED_FAST 
+     v_r=SPEED_SLOW 
+  elif (front_right<LIMIT):
+       v_r=SPEED_FAST
+       v_l=SPEED_NORMAL
+  elif (front_left<LIMIT):
+       v_l=SPEED_FAST 
+       v_r=SPEED_NORMAL
+
+                
+  rad=1
+  axl=1
+
+      ### ROTATIONAL VELOCITY ###
+  w=rad/axl*(v_r-v_l)
+
+  ### FORWARD VELOCITY ###
+  u=(rad/2)*(v_r+v_l)
+  
   return u, w
 
 
