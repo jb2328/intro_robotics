@@ -37,18 +37,12 @@ def euler(current_pose, t, dt):
   fx=lambda t,curr_po:(-curr_po+u*np.sin(t)) # curr_po is the current_pose
   fy=lambda t,curr_po:(-curr_po+u*np.cos(t)) # curr_po is the current pose
 
-  #fw=lambda t,s:(-s+np.cos(t))
-
-  print(dt*fx(t, current_pose[X]),w)
-  
-##  current_pose=next_pose
+  print(current_pose[YAW],w)
 
   next_pose[X]=current_pose[X] + dt*fx(t, current_pose[X])
   next_pose[Y]=current_pose[Y] + dt*fy(t, current_pose[Y]) 
 
-  next_pose[YAW]=w
- # next_pose[YAW]=next_pose[YAW]+ dt*(fw(t, next_pose[YAW]))
-  # next_pose=y
+  next_pose[YAW]=current_pose[YAW] + dt*w
 
   # MISSING: Use EulerEuler's integration method to return the next pose of our robot.
   # https://en.wikipedia.org/wiki/Euler_method
@@ -109,7 +103,7 @@ def rk4(current_pose, t, dt):
 
   next_pose[Y]=compute_ks(current_pose[Y],'y')  
   
-  next_pose[YAW]= np.floor(w)
+  next_pose[YAW]=current_pose[YAW] + dt*w
 
 
   return next_pose

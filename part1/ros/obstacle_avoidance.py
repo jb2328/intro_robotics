@@ -27,53 +27,50 @@ def braitenberg(front, front_left, front_right, left, right):
   # measurements given in argument to steer the robot.
   sigmoid_n = lambda z : (1/(1+np.exp(-z)))-0.5#0.5 to have a range from -0..5 to 0.5
 
-  #print(front)#, front_left, front_right, left, right)
- # u=np.tanh(front)
-  
+ 
   rad=1
-  axl=1
+  axl=2
 
-  #v_r=np.tanh(left)
-  #v_l=np.tanh(right)
-
-  #v_r=np.tanh(front)*0.5 + np.tanh(front_right)*0.25 + np.tanh(right)*0.25 
-  #v_l=np.tanh(front)*0.5 + np.tanh(front_left)*0.25 + np.tanh(left)*0.25    
-# 
-  # v_r=np.tanh(front-1)*0.15 + sigmoid_n(front_left)*0.45 + sigmoid_n(left)*0.25
-  # v_l=np.tanh(front-1)*0.15 + sigmoid_n(front_right)*0.45 + sigmoid_n(right)*0.25
-
-  front=round(front,4)
-  front=round(front,4)
-  front_left=round(front_left,4)
-  front_right=round(front_right,4)
-  left=round(left,4)
-  right=round(right,4)
+  front=np.round(np.nan_to_num(front),4)
+  #front=round(front,4)
+  front_left=np.round(np.nan_to_num(front_left),4)
+  front_right=np.round(np.nan_to_num(front_right),4)
+  left=np.round(np.nan_to_num(left),4)
+  right=np.round(np.nan_to_num(right),4)
   
 
-  v_r=np.tanh(front-1)*0.33 + np.tanh(front_left-1)*0.33 + np.tanh(left-1)*0.33
-  v_l=np.tanh(front-1)*0.33 + np.tanh(front_right-1)*0.33 + np.tanh(right-1)*0.33
+  v_r_raw=np.tanh(front-1)*0.5 + np.tanh(front_left-1)*0.25 + np.tanh(left-1)*0.25
+  v_l_raw=np.tanh(front-1)*0.5 + np.tanh(front_right-1)*0.25 + np.tanh(right-1)*0.25
 
-  v_r=round(v_r,3)
-  v_l=round(v_l,3)
+  v_r=np.round(v_r_raw,3)
+  v_l=np.round(v_l_raw,3)
   
-  coefs=np.array([[5,3,7],[1,2,5]])
-  dists=np.array([front, front_left, front_right, left,right]).reshape(5,1)
-  offsets=np.array([[-1],[-1]]).reshape(2,1)
+  #coefs=np.array([[5,3,7],[1,2,5]])
+  #dists=np.array([front, front_left, front_right, left,right]).reshape(5,1)
+  #offsets=np.array([[-1],[-1]]).reshape(2,1)
     
   
   ### ROTATIONAL VELOCITY ###
-  w=rad/axl*(v_r-v_l)
+  w=np.nan_to_num(rad/axl*(v_r-v_l))
 
     ### FORWARD VELOCITY ###
  # OFFSET=0
  # u=sigmoid_n(front)-OFFSET
-  u=(rad/2)*(v_r+v_l)
-
+  #u=np.nan_to_num((rad/2)*(v_r+v_l))
+  u=np.nan_to_num(rad/2)*(v_r+v_l)
+  
+  print(u,'\t',w, v_r, v_l)
+#guest editions
+#instead use a minimum of abs 
   if(np.isnan(u)):
+    print(front, front_left, front_right, left, right)
     u=0
 
- # print('u/w', u,w)
-  print('front d,v', front, u, 'right d v', right, v_r, 'left d v', left, v_l)
+  if(np.isnan(w)):
+    w=0
+
+  print(u, '\t',w)
+ # print('front d,v', front, u, 'right d v', right, v_r, 'left d v', left, v_l)
   return u, w
 
 
