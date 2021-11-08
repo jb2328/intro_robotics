@@ -44,11 +44,56 @@ def braitenberg(front, front_left, front_right, left, right):
   u = 0.  # [m/s]
   w = 0.  # [rad/s] going counter-clockwise.
 
+
   # MISSING: Implement a braitenberg controller that takes the range
-  # measurements given in argument to steer the robot safely.
+  # measurements given in argument to steer the robot.
+  sigmoid_n = lambda z : (1/(1+np.exp(-z)))-0.5#0.5 to have a range from -0..5 to 0.5
 
+ 
+  rad=1
+  axl=2
+
+  front=np.round(np.nan_to_num(front),4)
+  #front=round(front,4)
+  front_left=np.round(np.nan_to_num(front_left),4)
+  front_right=np.round(np.nan_to_num(front_right),4)
+  left=np.round(np.nan_to_num(left),4)
+  right=np.round(np.nan_to_num(right),4)
+  
+
+  v_r_raw=np.tanh(front-1)*0.5 + np.tanh(front_left-1)*0.25 + np.tanh(left-1)*0.25
+  v_l_raw=np.tanh(front-1)*0.5 + np.tanh(front_right-1)*0.25 + np.tanh(right-1)*0.25
+
+  v_r=np.round(v_r_raw,3)
+  v_l=np.round(v_l_raw,3)
+  
+  #coefs=np.array([[5,3,7],[1,2,5]])
+  #dists=np.array([front, front_left, front_right, left,right]).reshape(5,1)
+  #offsets=np.array([[-1],[-1]]).reshape(2,1)
+    
+  
+  ### ROTATIONAL VELOCITY ###
+  w=np.nan_to_num(rad/axl*(v_r-v_l))
+
+    ### FORWARD VELOCITY ###
+ # OFFSET=0
+ # u=sigmoid_n(front)-OFFSET
+  #u=np.nan_to_num((rad/2)*(v_r+v_l))
+  u=np.nan_to_num(rad/2)*(v_r+v_l)
+  
+  #print(u,'\t',w, v_r, v_l)
+#guest editions
+#instead use a minimum of abs 
+  if(np.isnan(u)):
+    #print(front, front_left, front_right, left, right)
+    u=0
+
+  if(np.isnan(w)):
+    w=0
+
+  #print(u, '\t',w)
+ # print('front d,v', front, u, 'right d v', right, v_r, 'left d v', left, v_l)
   return u, w
-
 
 class Particle(object):
   """Represents a particle."""
@@ -56,17 +101,54 @@ class Particle(object):
   def __init__(self):
     self._pose = np.zeros(3, dtype=np.float32)
     self._weight = 1.
+    print('init', self._pose)
 
     # MISSING: Initialize a particle randomly in the arena. Set the values of
     # _pose such that it is a valid pose (i.e., inside the arena walls, but
     # outside the cylinder). Consider implementing is_valid() below and use it
     # in this function.
+    valid_particle=False
+
+    while(not valid_particle):
+        sample=np.random.uniform(low=-2, high=2, size=(2))
+        self._pose=[sample[0], sample[1],0]
+        valid_particle=self.is_valid()
+        print('particle', self._pose)
+        if valid_particle:
+            print('success')
+            pass
+            
+    self._weight=1
+    print('successful pass')
+           # self.is_valid(self)
+    
 
   def is_valid(self):
     # MISSING: Implement a function that returns True if the current particle
     # position is valid. You might need to use this function in __init__()
     # and compute_weight().
-    return True
+
+    
+    
+    x=self._pose[0]
+    y=self._pose[1]
+    z=self._pose[2]
+
+    p=self._pose
+  
+    ##SHOULD ALSO CHECK THAT IT'S NOT IN THE RECTANGLE
+    #CALC DIST FROM CYLIDER IS HIGHER THAN IT'S RADIUS!
+    distance = np.sqrt( ((p[0]-CYLINDER_POSITION[0])**2)+((p[1]-CYLINDER_POSITION[1])**2) )
+    print('dist',distance, CYLINDER_RADIUS)
+
+    if(p[0]>-2 and p[0]<1 and p[1]>-2 and p[1]<2 and distance>CYLINDER_RADIUS ):
+        print('True')
+        print('p',p)
+        return True
+    else:
+        return False
+  
+    #return True
 
 
   def move(self, delta_pose):
@@ -74,10 +156,14 @@ class Particle(object):
     # delta_pose is an offset in the particle frame. As motion model,
     # use roughtly 10% standard deviation with respect to the forward
     # and rotational velocity.
+
+    
     #
     # In a second step, make the necessary modifications to handle the
     # kidnapped robot problem. For example, with a low probability the
     # particle can be repositioned randomly in the arena.
+
+    
     pass
 
   def compute_weight(self, front, front_left, front_right, left, right):
