@@ -107,7 +107,9 @@ class Particle(object):
     # _pose such that it is a valid pose (i.e., inside the arena walls, but
     # outside the cylinder). Consider implementing is_valid() below and use it
     # in this function.
-    valid_particle=False
+    sample=np.random.uniform(low=-2, high=2, size=(2))
+    self._pose=[sample[0], sample[1],0]
+    valid_particle=self.is_valid()
 
     while(not valid_particle):
         sample=np.random.uniform(low=-2, high=2, size=(2))
@@ -119,7 +121,10 @@ class Particle(object):
             pass
             
     self._weight=1
+   # gaussian=np.random.normal(0,0,50)
     print('successful pass')
+    
+    self.move(5)
            # self.is_valid(self)
     
 
@@ -128,12 +133,7 @@ class Particle(object):
     # position is valid. You might need to use this function in __init__()
     # and compute_weight().
 
-    
-    
-    x=self._pose[0]
-    y=self._pose[1]
-    z=self._pose[2]
-
+  
     p=self._pose
   
     ##SHOULD ALSO CHECK THAT IT'S NOT IN THE RECTANGLE
@@ -156,8 +156,13 @@ class Particle(object):
     # delta_pose is an offset in the particle frame. As motion model,
     # use roughtly 10% standard deviation with respect to the forward
     # and rotational velocity.
+    i=0
+    #gaussian=numpy.random.normal(0,0.1,50)
+    gaussian=np.random.normal(0,0.25,(50,2))
 
-    
+    self._pose[0]=gaussian[0][++i]
+    self._pose[1]=-gaussian[1][++i]
+        
     #
     # In a second step, make the necessary modifications to handle the
     # kidnapped robot problem. For example, with a low probability the
@@ -384,7 +389,7 @@ def run(args):
     particle_msg = PointCloud()
     particle_msg.header.seq = frame_id
     particle_msg.header.stamp = rospy.Time.now()
-    particle_msg.header.frame_id = '/odom'
+    particle_msg.header.frame_id = 'odom'
     intensity_channel = ChannelFloat32()
     intensity_channel.name = 'intensity'
     particle_msg.channels.append(intensity_channel)
