@@ -124,7 +124,7 @@ class Particle(object):
    # gaussian=np.random.normal(0,0,50)
     print('successful pass')
     
-    self.move(5)
+   # self.move(delta_pose)
            # self.is_valid(self)
     
 
@@ -156,14 +156,26 @@ class Particle(object):
     # delta_pose is an offset in the particle frame. As motion model,
     # use roughtly 10% standard deviation with respect to the forward
     # and rotational velocity.
-    i=0
-    #gaussian=numpy.random.normal(0,0.1,50)
-    gaussian=np.random.normal(0,0.25,(50,2))
+    print('delta_pose', delta_pose)
 
-    self._pose[0]=gaussian[0][++i]
-    self._pose[1]=-gaussian[1][++i]
-        
-    #
+    #gaussian=numpy.random.normal(0,0.1,50)
+    gaussian=np.random.normal(0,10,(50,2))
+
+    dx=delta_pose[0]
+    dy=delta_pose[2]
+
+   
+#    self._pose[0]+=dx
+ #   self._pose[1]+=dy
+  #  self._pose[2]+=0
+
+
+    self._pose[0]=self._pose[0]*np.cos(dy)-self._pose[1]*np.sin(dy)+dx
+    self._pose[1]=self._pose[0]*np.sin(dy)+self._pose[1]*np.cos(dy)
+    self._pose[2]+=0
+
+    
+    
     # In a second step, make the necessary modifications to handle the
     # kidnapped robot problem. For example, with a low probability the
     # particle can be repositioned randomly in the arena.
