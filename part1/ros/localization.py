@@ -120,7 +120,7 @@ class Particle(object):
             print('success')
             pass
             
-    self._weight=1
+    #self._weight=1
    # gaussian=np.random.normal(0,0,50)
     print('successful pass')
     
@@ -144,6 +144,7 @@ class Particle(object):
     if(p[0]>-2 and p[0]<1 and p[1]>-2 and p[1]<2 and distance>CYLINDER_RADIUS ):
         print('True')
         print('p',p)
+        #self.compute_weight()
         return True
     else:
         return False
@@ -156,7 +157,7 @@ class Particle(object):
     # delta_pose is an offset in the particle frame. As motion model,
     # use roughtly 10% standard deviation with respect to the forward
     # and rotational velocity.
-    print('delta_pose', delta_pose)
+    #print('delta_pose', delta_pose)
 
     #gaussian=numpy.random.normal(0,0.1,50)
     gaussian=np.random.normal(0,10,(50,2))
@@ -165,21 +166,16 @@ class Particle(object):
     dy=delta_pose[2]
 
    
-#    self._pose[0]+=dx
- #   self._pose[1]+=dy
-  #  self._pose[2]+=0
-
-
-    self._pose[0]=self._pose[0]*np.cos(dy)-self._pose[1]*np.sin(dy)+dx
-    self._pose[1]=self._pose[0]*np.sin(dy)+self._pose[1]*np.cos(dy)
+    self._pose[0]=(self._pose[0]*np.cos(dy)-self._pose[1]*np.sin(dy)+dx)
+    self._pose[1]=(self._pose[0]*np.sin(dy)+self._pose[1]*np.cos(dy))
     self._pose[2]+=0
 
-    
-    
+        
     # In a second step, make the necessary modifications to handle the
     # kidnapped robot problem. For example, with a low probability the
     # particle can be repositioned randomly in the arena.
 
+    #MULTIPLY GAUSSIAN
     
     pass
 
@@ -192,6 +188,33 @@ class Particle(object):
     # will show up as infinity).
     sigma = .8
     variance = sigma ** 2.
+
+    #stdev of 80cm
+    gaussian=np.random.normal(0,sigma,(5,1)).astype('float64')
+ #   print('gauss', gaussian)
+    front_adj=np.round(np.nan_to_num(front)+gaussian[0][0],4)
+    front_left_adj=np.round(np.nan_to_num(front_left)+gaussian[1][0],4)
+    front_right_adj=np.round(np.nan_to_num(front_right)+gaussian[2][0],4)
+    left_adj=np.round(np.nan_to_num(left)+gaussian[3][0],4)
+    right_adj=np.round(np.nan_to_num(right)+gaussian[4][0],4)
+    
+
+#    print(self._weight)
+   # self._weight=0.5
+    self._weight=front_adj*0.2+front_left_adj*0.2+front_right_adj*0.2+left_adj*0.2+right_adj*0.2
+
+
+    if(not self.is_valid):
+        self._weight=-99
+     # if(self._weight<1):
+    #    self._weight=1
+    print(self._weight, self.is_valid())
+    
+    ##print(len(particles))
+
+
+   # self.ray_trace()
+
 
   def ray_trace(self, angle):
     """Returns the distance to the first obstacle from the particle."""

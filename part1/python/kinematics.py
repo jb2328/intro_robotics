@@ -23,6 +23,7 @@ def euler(current_pose, t, dt):
   next_pose = current_pose.copy()
   u = 0.25
   w = np.cos(t)
+ # w = np.cos(np.floor(t))
 
   #forward velocity
    # x=u*cos(theta)# where theta is time
@@ -75,7 +76,8 @@ def rk4(current_pose, t, dt):
 ##NOT SURE IF I NEED THESE
   u = 0.25
   w = np.cos(t)
-
+  #w = np.cos(np.floor(t))
+ 
  # fx=lambda t,curr_po:(-curr_po+u*np.sin(t)) # curr_po is the current_pose
   #fy=lambda t,curr_po:(-curr_po+u*np.cos(t)) # curr_po is the current pose
 
