@@ -62,58 +62,41 @@ def rk4(current_pose, t, dt):
   print('next_pose', next_pose)
   # MISSING: Use classical Runge-Kutta to return the next pose of our robot.
   # https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
+  
+  # #based off of https://mathworld.wolfram.com/Runge-KuttaMethod.html
 
 ##NOT SURE IF I NEED THESE
   u = 0.25
-  w = np.cos(t)
-  w = np.cos(np.floor(t))
- 
-  fx=lambda t,curr_po:(u*np.cos(w)) # curr_po is the current_pose
-  fy=lambda t,curr_po:(u*np.sin(w)) # curr_po is the current pose
 
-###ATTENTION PAN'S CODE BELOW, TO BE MODIFIED!!!###
-  print('current_pose', current_pose[X],dt)
+##calculate thetas
+  k1=np.cos((t        ))
+  k2=np.cos((t + dt/2.))
+  k3=np.cos((t + dt/2.))
+  k4=np.cos((t + dt   ))
+
+#if floored:
+  # k1=np.cos(np.floor(t        ))
+  # k2=np.cos(np.floor(t + dt/2.))
+  # k3=np.cos(np.floor(t + dt/2.))
+  # k4=np.cos(np.floor(t + dt   ))
+    # 
+
+    ##calc x values
   xk1=u*np.cos(current_pose[YAW])
-  xk3=u*np.cos(current_pose[YAW])
-  xk2=u*np.cos(current_pose[YAW])
-  xk4=u*np.cos(current_pose[YAW])
+  xk3=u*np.cos(current_pose[YAW] + dt*k1/2)
+  xk2=u*np.cos(current_pose[YAW]+ dt*k2/2)
+  xk4=u*np.cos(current_pose[YAW]+ dt*k3)
 
+##calc y values
   yk1=u*np.sin(current_pose[YAW])
-  yk3=u*np.sin(current_pose[YAW])
-  yk2=u*np.sin(current_pose[YAW])
-  yk4=u*np.sin(current_pose[YAW])
+  yk3=u*np.sin(current_pose[YAW]+dt*k1/2)
+  yk2=u*np.sin(current_pose[YAW]+dt*k2/2)
+  yk4=u*np.sin(current_pose[YAW]+dt*k3)
 
-  thetak1=np.cos(np.floor(t        ))
-  thetak2=np.cos(np.floor(t + dt/2.))
-  thetak3=np.cos(np.floor(t + dt/2.))
-  thetak4=np.cos(np.floor(t + dt   ))
-
-  next_pose[YAW]=current_pose[YAW]+dt*(thetak1+2.*thetak2+2.*thetak3+thetak4)/6.
-  next_pose[X]=current_pose[X] + dt*(xk1 + 2.*xk2 + 2.*xk3 + xk4)/6.
-  next_pose[Y]=current_pose[Y] + dt*(yk1 + 2.*yk2 + 2.*yk3 + yk4)/6.
-
-  # def compute_ks(y_val, modifier):
-# 
-  # #based off of https://mathworld.wolfram.com/Runge-KuttaMethod.html
-    # if(modifier == 'y'):
-        # k1 = dt * fy(t         , y_val       )
-        # k2 = dt * fy(t + 0.5*dt, y_val+0.5*k1)
-        # k3 = dt * fy(t + 0.5*dt, y_val+0.5*k2)
-        # k4 = dt * fy(t +     dt, y_val+    k3)
-    # else:#if computing x coord
-        # k1 = dt * fx(t         , y_val       )
-        # k2 = dt * fx(t + 0.5*dt, y_val+0.5*k1)
-        # k3 = dt * fx(t + 0.5*dt, y_val+0.5*k2)
-        # k4 = dt * fx(t +     dt, y_val+    k3)
-# 
-    # computed_k=y_val+(1.0/6.0)*(k1+2*k2+2*k3+k4)
-# 
-    # return computed_k
- # 
-
-  #next_pose[X]=compute_ks(current_pose[X],'x')
-  #next_pose[Y]=compute_ks(current_pose[Y],'y')  
-  #next_pose[YAW]=current_pose[YAW] + dt*w
+##calc and assign x y and yaw
+  next_pose[YAW]=current_pose[YAW]+ dt * (k1  + 2.*k2  + 2.*k3  + k4)/6.
+  next_pose[X]  =current_pose[X]  + dt * (xk1 + 2.*xk2 + 2.*xk3 + xk4)/6.
+  next_pose[Y]  =current_pose[Y]  + dt * (yk1 + 2.*yk2 + 2.*yk3 + yk4)/6.
 
 
   return next_pose

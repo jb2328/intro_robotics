@@ -47,43 +47,34 @@ def braitenberg(front, front_left, front_right, left, right):
 
   # MISSING: Implement a braitenberg controller that takes the range
   # measurements given in argument to steer the robot.
-  sigmoid_n = lambda z : (1/(1+np.exp(-z)))-0.5#0.5 to have a range from -0..5 to 0.5
 
- 
+  ##axis and wheel size
   rad=1
   axl=2
 
+  ##collect sensor data from all five sensors, make sure there are no NaNs
   front=np.round(np.nan_to_num(front),4)
-  #front=round(front,4)
   front_left=np.round(np.nan_to_num(front_left),4)
   front_right=np.round(np.nan_to_num(front_right),4)
   left=np.round(np.nan_to_num(left),4)
   right=np.round(np.nan_to_num(right),4)
   
-
+#using tanh function to drive the robot
   v_r_raw=np.tanh(front-1)*0.5 + np.tanh(front_left-1)*0.25 + np.tanh(left-1)*0.25
   v_l_raw=np.tanh(front-1)*0.5 + np.tanh(front_right-1)*0.25 + np.tanh(right-1)*0.25
 
+##round the calculate values so it's easier to print
   v_r=np.round(v_r_raw,3)
   v_l=np.round(v_l_raw,3)
   
-  #coefs=np.array([[5,3,7],[1,2,5]])
-  #dists=np.array([front, front_left, front_right, left,right]).reshape(5,1)
-  #offsets=np.array([[-1],[-1]]).reshape(2,1)
-    
   
   ### ROTATIONAL VELOCITY ###
   w=np.nan_to_num(rad/axl*(v_r-v_l))
 
     ### FORWARD VELOCITY ###
- # OFFSET=0
- # u=sigmoid_n(front)-OFFSET
-  #u=np.nan_to_num((rad/2)*(v_r+v_l))
   u=np.nan_to_num(rad/2)*(v_r+v_l)
-  
-  #print(u,'\t',w, v_r, v_l)
-#guest editions
-#instead use a minimum of abs 
+
+##complimentary check for nans ##DEBUG  
   if(np.isnan(u)):
     #print(front, front_left, front_right, left, right)
     u=0
@@ -107,6 +98,8 @@ class Particle(object):
     # _pose such that it is a valid pose (i.e., inside the arena walls, but
     # outside the cylinder). Consider implementing is_valid() below and use it
     # in this function.
+
+    ##generate random coordinates
     sample=np.random.uniform(low=-2, high=2, size=(2))
     self._pose=[sample[0], sample[1],0]
     valid_particle=self.is_valid()
@@ -119,13 +112,10 @@ class Particle(object):
         if valid_particle:
             print('success')
             pass
-            
+
+    ##set the weight to 1; uncommented for 3)d
     #self._weight=1
-   # gaussian=np.random.normal(0,0,50)
     print('successful pass')
-    
-   # self.move(delta_pose)
-           # self.is_valid(self)
     
 
   def is_valid(self):
@@ -157,18 +147,13 @@ class Particle(object):
     # delta_pose is an offset in the particle frame. As motion model,
     # use roughtly 10% standard deviation with respect to the forward
     # and rotational velocity.
-    #print('delta_pose', delta_pose)
 
-    #gaussian=numpy.random.normal(0,0.1,50)
-    gaussian=np.random.normal(0,10,(50,2))
+    dx=delta_pose[X]
+    dy=delta_pose[YAW]
 
-    dx=delta_pose[0]
-    dy=delta_pose[2]
-
-   
-    self._pose[0]=(self._pose[0]*np.cos(dy)-self._pose[1]*np.sin(dy)+dx)
+   ##apply rotational transformation
+    self._pose[0]=(self._pose[0]*np.cos(dy)-self._pose[1]*np.sin(dy))
     self._pose[1]=(self._pose[0]*np.sin(dy)+self._pose[1]*np.cos(dy))
-    self._pose[2]+=0
 
         
     # In a second step, make the necessary modifications to handle the
@@ -191,17 +176,17 @@ class Particle(object):
 
     #stdev of 80cm
     gaussian=np.random.normal(0,sigma,(5,1)).astype('float64')
- #   print('gauss', gaussian)
-    front_adj=np.round(np.nan_to_num(front)+gaussian[0][0],4)
-    front_left_adj=np.round(np.nan_to_num(front_left)+gaussian[1][0],4)
-    front_right_adj=np.round(np.nan_to_num(front_right)+gaussian[2][0],4)
-    left_adj=np.round(np.nan_to_num(left)+gaussian[3][0],4)
-    right_adj=np.round(np.nan_to_num(right)+gaussian[4][0],4)
-    
+
+    # front_adj=np.round(np.nan_to_num(front)+gaussian[0][0],4)
+    # front_left_adj=np.round(np.nan_to_num(front_left)+gaussian[1][0],4)
+    # front_right_adj=np.round(np.nan_to_num(front_right)+gaussian[2][0],4)
+    # left_adj=np.round(np.nan_to_num(left)+gaussian[3][0],4)
+    # right_adj=np.round(np.nan_to_num(right)+gaussian[4][0],4)
+    #
 
 #    print(self._weight)
    # self._weight=0.5
-    self._weight=front_adj*0.2+front_left_adj*0.2+front_right_adj*0.2+left_adj*0.2+right_adj*0.2
+   # self._weight=front_adj*0.2+front_left_adj*0.2+front_right_adj*0.2+left_adj*0.2+right_adj*0.2
 
 
     if(not self.is_valid):
