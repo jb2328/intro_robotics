@@ -34,13 +34,13 @@ def euler(current_pose, t, dt):
   print(t,current_pose, '\n')
 
     #http://geofhagopian.net/m2c/M2C-S18/euler_method.pdf
-  fx=lambda curr_po:(u*np.cos(current_pose[YAW])) # curr_po is the current_pose
-  fy=lambda curr_po:(u*np.sin(current_pose[YAW])) # curr_po is the current pose
+  fx=lambda curr_po_yaw:(u*np.cos(curr_po_yaw)) # curr_po is the current_pose
+  fy=lambda curr_po_yaw:(u*np.sin(curr_po_yaw)) # curr_po is the current pose
 
   print(current_pose[YAW],w)
 
-  next_pose[X]=current_pose[X] + dt*fx(current_pose[X])
-  next_pose[Y]=current_pose[Y] + dt*fy(current_pose[Y]) 
+  next_pose[X]=current_pose[X] + dt*fx(current_pose[YAW])
+  next_pose[Y]=current_pose[Y] + dt*fy(current_pose[YAW]) 
 
   next_pose[YAW]=current_pose[YAW] + dt*w
 
@@ -83,7 +83,7 @@ def rk4(current_pose, t, dt):
 
     ##calc x values
   xk1=u*np.cos(current_pose[YAW])
-  xk3=u*np.cos(current_pose[YAW] + dt*k1/2)
+  xk3=u*np.cos(current_pose[YAW]+ dt*k1/2)
   xk2=u*np.cos(current_pose[YAW]+ dt*k2/2)
   xk4=u*np.cos(current_pose[YAW]+ dt*k3)
 

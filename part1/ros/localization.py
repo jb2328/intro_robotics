@@ -148,6 +148,7 @@ class Particle(object):
     # use roughtly 10% standard deviation with respect to the forward
     # and rotational velocity.
 
+    #get the x and yaw positions 
     dx=delta_pose[X]
     dy=delta_pose[YAW]
 
@@ -155,7 +156,9 @@ class Particle(object):
     self._pose[0]=(self._pose[0]*np.cos(dy)-self._pose[1]*np.sin(dy))
     self._pose[1]=(self._pose[0]*np.sin(dy)+self._pose[1]*np.cos(dy))
 
-        
+
+##add the delta pose to self pose
+    self._pose+=delta_pose##makes it follow the robot
     # In a second step, make the necessary modifications to handle the
     # kidnapped robot problem. For example, with a low probability the
     # particle can be repositioned randomly in the arena.
@@ -174,31 +177,20 @@ class Particle(object):
     sigma = .8
     variance = sigma ** 2.
 
-    #stdev of 80cm
-    gaussian=np.random.normal(0,sigma,(5,1)).astype('float64')
+    #here we want to read the ray treace function as the ground truth and multiply by a gaussian
+    #to approximate the next position
 
-    # front_adj=np.round(np.nan_to_num(front)+gaussian[0][0],4)
-    # front_left_adj=np.round(np.nan_to_num(front_left)+gaussian[1][0],4)
-    # front_right_adj=np.round(np.nan_to_num(front_right)+gaussian[2][0],4)
-    # left_adj=np.round(np.nan_to_num(left)+gaussian[3][0],4)
-    # right_adj=np.round(np.nan_to_num(right)+gaussian[4][0],4)
-    #
-
-#    print(self._weight)
-   # self._weight=0.5
-   # self._weight=front_adj*0.2+front_left_adj*0.2+front_right_adj*0.2+left_adj*0.2+right_adj*0.2
-
-
-    if(not self.is_valid):
-        self._weight=-99
-     # if(self._weight<1):
-    #    self._weight=1
-    print(self._weight, self.is_valid())
+    ##we need to do it for every robot's sensor
+    #p_front=np.exp(-0.5*((front-self.ray_trace(sensor_angle)/sigma)**2))/(sigma*np.sqrt(2*np.pi))
     
-    ##print(len(particles))
+    ##where 0 represents the front sensors angle
+    ##we then do so for the rest of the sensors using their appropriate angles and calculate the self._weight value
 
+    #the self._weight value is calculated by adding all sensor ground readings(ray_trace)
+    
 
-   # self.ray_trace()
+    ##the last step is assign 0 weight for particles that are not valid, ie fall outside the arena or
+    #end up in the cylinder
 
 
   def ray_trace(self, angle):
