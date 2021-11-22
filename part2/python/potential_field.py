@@ -8,7 +8,11 @@ import numpy as np
 
 
 WALL_OFFSET = 2.
-CYLINDER_POSITION = np.array([.3, .2], dtype=np.float32)
+#CYLINDER_POSITION = np.array([.3, .2], dtype=np.float32)
+
+CYLINDER_POSITION = np.array([.0, .5], dtype=np.float32)
+CYLINDER_POSITION2 = np.array([.5, .0], dtype=np.float32)
+
 CYLINDER_RADIUS = .3
 GOAL_POSITION = np.array([1.5, 1.5], dtype=np.float32)
 START_POSITION = np.array([-1.5, -1.5], dtype=np.float32)
@@ -35,19 +39,28 @@ def get_velocity_to_reach_goal(position, goal_position):
   y2=goal[1]
   
   #get the distance between current position and the goal
+  #to calculate the magnitude
   #(x2-x1)^2 + (y2-y1)^2
-  dist=np.sqrt((x2-x1)**2+(y2-y1)**2)
+  mag=np.sqrt((x2-x1)**2+(y2-y1)**2)
+  #get the vector's direction and normalise it
+  direction=normalize([x2-x1, y2-y1])
+ 
+  #multiply the direction by the calucated magnitude and and random variation
+  #to avoid zero vector sum from perpendicular vectors
+  direction[0]*=mag+(np.random.uniform(-2,2))
+  direction[1]*=mag+(np.random.uniform(-2,2))
 
-  #subtract the current vector field values from the distance
-  v[0]=dist-x1
-  v[1]=dist-y1
-
-  #OPTIONAL: get the max vector's magnitude
-  magnitude=np.linalg.norm(v)
-  #if(magnitude>9):
-  #  print('magnitude:', magnitude)
+  #multiply the direction by the calucated magnitude
+  #direction[0]*=mag
+  #direction[1]*=mag
   
-  return v
+  #OPTIONAL: get the max vector's magnitude
+  magnitude=np.linalg.norm(direction)
+  if(magnitude>4.8):
+    print('magnitude:', magnitude)
+  
+  return cap(direction, MAX_SPEED)
+  #direction #cap(directionv,MAX_SPEED)
 
 
 def get_velocity_to_avoid_obstacles(position, obstacle_positions, obstacle_radii):
@@ -59,6 +72,25 @@ def get_velocity_to_avoid_obstacles(position, obstacle_positions, obstacle_radii
   # speeds that are larger than max_speed for each obstacle. Both obstacle_positions
   # and obstacle_radii are lists.
 
+  #a funciton that calculates the force radiating of an obstacle
+  def get_force(x,y,obstacle_pos,rad):
+    obs_x=obstacle_pos[0]
+    obs_y=obstacle_pos[1]
+
+    #magnitude is calculated by dividing the obstacle area by the distance to it
+    #the drawbakc is that it only works with circular obstacles
+    magnitude=(3.14*rad**2)/np.sqrt((obs_x-x)**2+(obs_y-y)**2)
+
+    #calculate the vector direction and normalise
+    direction=normalize([obs_x-x, obs_y-y])
+
+    #multiply the directon by the magnitude
+    direction[0]*=magnitude
+    direction[1]*=magnitude
+
+    return direction
+
+    
  #get current and goal positions
   current=position
 
@@ -76,33 +108,25 @@ def get_velocity_to_avoid_obstacles(position, obstacle_positions, obstacle_radii
 
   iterator=0
   for obstacle in obstacles:
-      #get the distance between current position and the obstacle
-      #(x2-x1)^2 + (y2-y1)^2
-      x2_obs=obstacle[0]
-      y2_obs=obstacle[1]
 
-      dist_to_obst=np.sqrt((x2_obs-x1)**2+(y2_obs-y1)**2)-obstacle_radii[iterator]
-      dists_to_obstacles.append(dist_to_obst)
+     #get the radius
+      radius=obstacle_radii[iterator]
+    #calc the obstacle force 
+      obstacle_force=get_force(x1,y1, obstacle,radius)
+    #assign the force to the vector
+      v[0]+=obstacle_force[0]
+      v[1]+=obstacle_force[1]
+            
       iterator+=1
-        
-# 
-  # ##get the distance from the current position and the obstacle
-  # print('obs_positions',obstacle_positions)
-  # print('obs_radii',obstacle_radii)
 
-  #obstacle radii multiplier
-  #iterator2=0
-  for dists in dists_to_obstacles:
-      v[0]=((dists-x1)*-1)
-      v[1]=((dists-y1)*-1)
 
-      magnitude=np.linalg.norm(v)
+##optional, calc the magnitude
+  magnit=np.linalg.norm(v)
+      
+#sinc objects need to repel the robot, multiply by -1 to inverse the vector
+  v=v*(-1)
 
-      #print(v,magnitude)
-  print(v,cap(v,MAX_SPEED))
-
-      ##make sure v isn't more than max speed
-  return cap(v, 0.5)
+  return v#cap(v, -0.25)
 
 
 def normalize(v):
@@ -127,7 +151,9 @@ def get_velocity(position, mode='all'):
   if mode in ('obstacle', 'all'):
     v_avoid = get_velocity_to_avoid_obstacles(
       position,
-      [CYLINDER_POSITION],
+      #[CYLINDER_POSITION,CYLINDER_POSITION2],
+      #[CYLINDER_RADIUS,CYLINDER_RADIUS])
+       [CYLINDER_POSITION ],
       [CYLINDER_RADIUS])
   else:
     v_avoid = np.zeros(2, dtype=np.float32)
@@ -154,7 +180,12 @@ if __name__ == '__main__':
   plt.quiver(X, Y, U, V, units='width')
 
   # Plot environment.
-  ax.add_artist(plt.Circle(CYLINDER_POSITION, CYLINDER_RADIUS, color='gray'))
+ # ax.add_artist(plt.Circle(CYLINDER_POSITION, CYLINDER_RADIUS, color='gray'))
+
+
+  ax.add_artist(plt.Circle([0.5,0], CYLINDER_RADIUS, color='lightgray'))
+  ax.add_artist(plt.Circle([0,0.5], CYLINDER_RADIUS, color='gray'))
+
   plt.plot([-WALL_OFFSET, WALL_OFFSET], [-WALL_OFFSET, -WALL_OFFSET], 'k')
   plt.plot([-WALL_OFFSET, WALL_OFFSET], [WALL_OFFSET, WALL_OFFSET], 'k')
   plt.plot([-WALL_OFFSET, -WALL_OFFSET], [-WALL_OFFSET, WALL_OFFSET], 'k')
