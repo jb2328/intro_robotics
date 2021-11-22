@@ -30,9 +30,30 @@ MAX_ITERATIONS = 500
 
 def sample_random_position(occupancy_grid):
   position = np.zeros(2, dtype=np.float32)
-
+ 
   # MISSING: Sample a valid random position (do not sample the yaw).
   # The corresponding cell must be free in the occupancy grid.
+
+  #occupancy grid size is 147456
+  #meaning one side is 384 pixels
+
+  position[0]=np.random.uniform(-2,-1)
+  position[1]=np.random.uniform(-1.5,1)
+
+  rand_x=np.random.randint(0,384,1)
+  rand_y=np.random.randint(0,384,1)
+  
+ # def is_valid(pos):
+ #   obs_x=.3
+ #   obs_y=
+ #   x=pos[0]
+ #   y=pos[1]
+    
+ #   if(np.sqrt((obs_x-x)**2+(obs_y-y)**2))
+ 
+
+  print(occupancy_grid._values[rand_x, rand_y])
+  print(position)
 
   return position
 

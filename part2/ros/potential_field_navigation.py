@@ -48,6 +48,22 @@ def feedback_linearized(pose, velocity, epsilon):
   # vector given as argument. Epsilon corresponds to the distance of
   # linearized point in front of the robot.
 
+  print('pose',pose)
+  print('velocity', velocity)
+
+  x=velocity[0]
+  y=velocity[1]
+  theta=pose[1]
+
+  xp=x+epsilon*np.cos(theta)
+  yp=y+epsilon*np.sin(theta)
+
+  #xp=x+epsilon*(-theta*np.sin(theta))
+  #yp=y+epsilon*( theta*np.cos(theta))
+    
+  u=xp*np.cos(theta)+yp*np.sin(theta)
+  w=pow(epsilon, -1)*(-xp*np.sin(theta)+yp*np.cos(theta))
+
   return u, w
 
 
