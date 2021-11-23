@@ -29,7 +29,7 @@ MAX_ITERATIONS = 500
 
 
 def sample_random_position(occupancy_grid):
-  position = np.zeros(2, dtype=np.float32)
+  pos = np.zeros(2, dtype=np.float32)
  
   # MISSING: Sample a valid random position (do not sample the yaw).
   # The corresponding cell must be free in the occupancy grid.
@@ -37,11 +37,33 @@ def sample_random_position(occupancy_grid):
   #occupancy grid size is 147456
   #meaning one side is 384 pixels
 
-  position[0]=np.random.uniform(-2,-1)
-  position[1]=np.random.uniform(-1.5,1)
+ # position=np.random.uniform(-2.5,2.5,2)
 
-  rand_x=np.random.randint(0,384,1)
-  rand_y=np.random.randint(0,384,1)
+  
+  is_occupied=True
+  is_free=False
+
+  
+  while(not is_free):
+      gen_pos=np.random.randint(0,383,2)
+      
+      pos=occupancy_grid.get_position(gen_pos[X], gen_pos[Y])
+      #print('generatead', gen_pos)
+      #print('grid pos', pos)
+      is_free=occupancy_grid.is_free(pos)
+      is_occupied=occupancy_grid.is_occupied(pos)
+
+      if (is_occupied):
+        break
+      #print('not free try again')  
+  
+ # print('success, it was free')
+  
+  #print(occupancy_grid._values)
+  #print(occupancy_grid.is_occupied(pos))
+  #print(occupancy_grid.is_free(pos))
+  #print(occupancy_grid.get_index(pos))
+
   
  # def is_valid(pos):
  #   obs_x=.3
@@ -52,10 +74,10 @@ def sample_random_position(occupancy_grid):
  #   if(np.sqrt((obs_x-x)**2+(obs_y-y)**2))
  
 
-  print(occupancy_grid._values[rand_x, rand_y])
-  print(position)
-
-  return position
+  #print(occupancy_grid._values[rand_x, rand_y])
+  #pos=np.random.uniform(-2,2,)
+  
+  return pos
 
 
 def adjust_pose(node, final_position, occupancy_grid):
@@ -63,6 +85,12 @@ def adjust_pose(node, final_position, occupancy_grid):
   final_pose[:2] = final_position
   final_node = Node(final_pose)
 
+  #find_circle(noed)
+
+  #calc direction
+  #direction=final_position[X]-
+  print('final_pos',final_position)
+  print('curr_pos',final_pose)
   # MISSING: Check whether there exists a simple path that links node.pose
   # to final_position. This function needs to return a new node that has
   # the same position as final_position and a valid yaw. The yaw is such that
@@ -70,6 +98,9 @@ def adjust_pose(node, final_position, occupancy_grid):
   # adjusted final pose. If no such arc exists (e.g., collision) return None.
   # Assume that the robot always goes forward.
   # Feel free to use the find_circle() function below.
+
+  print('final_node yaw',final_node.yaw)
+  final_node.pose[YAW]=1 #+np.random.uniform(-.01,.01)
 
   return final_node
 
