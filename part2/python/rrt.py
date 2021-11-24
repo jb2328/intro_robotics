@@ -38,7 +38,7 @@ def sample_random_position(occupancy_grid):
   #meaning one side is 384 pixels
 
  # position=np.random.uniform(-2.5,2.5,2)
-
+  DEBUG=False
   
   is_occupied=True
   is_free=False
@@ -48,30 +48,22 @@ def sample_random_position(occupancy_grid):
       gen_pos=np.random.randint(0,383,2)
       
       pos=occupancy_grid.get_position(gen_pos[X], gen_pos[Y])
-      #print('generatead', gen_pos)
-      #print('grid pos', pos)
+
+      if(DEBUG):
+        print('generatead', gen_pos)
+        print('grid pos', pos)
+
       is_free=occupancy_grid.is_free(pos)
       is_occupied=occupancy_grid.is_occupied(pos)
 
       if (is_occupied):
         break
-      #print('not free try again')  
-  
- # print('success, it was free')
-  
-  #print(occupancy_grid._values)
-  #print(occupancy_grid.is_occupied(pos))
-  #print(occupancy_grid.is_free(pos))
-  #print(occupancy_grid.get_index(pos))
 
-  
- # def is_valid(pos):
- #   obs_x=.3
- #   obs_y=
- #   x=pos[0]
- #   y=pos[1]
-    
- #   if(np.sqrt((obs_x-x)**2+(obs_y-y)**2))
+      if(DEBUG):
+        print('not free try again') 
+
+  if(DEBUG):               
+     print('success, it was free')
  
 
   #print(occupancy_grid._values[rand_x, rand_y])
@@ -85,12 +77,116 @@ def adjust_pose(node, final_position, occupancy_grid):
   final_pose[:2] = final_position
   final_node = Node(final_pose)
 
-  #find_circle(noed)
+  curr_pose=node.pose[:2]
+  
+  DEBUG=False
+  
+  new_node=find_circle(node, final_node)[0]
+  
+  node_rad=find_circle(node, final_node)
+  
+  rad_pos=node_rad[0]
+  rad_len=node_rad[1]
 
-  #calc direction
-  #direction=final_position[X]-
-  print('final_pos',final_position)
-  print('curr_pos',final_pose)
+  def cart_to_polar(node):
+    r=np.sqrt(node[X]**2+node[Y]**2)
+
+    dx=0-node[X]
+    dy=0-node[Y]
+
+    polar_angle= np.arctan2(-dy,-dx)
+    
+    #polar_angle=np.arctan(node[Y]/node[X])
+    #[r, np.rad2deg(polar_angle)]
+    return [r, polar_angle]
+
+
+  def cart2pol(x, y):
+      rho = np.sqrt(x**2 + y**2)
+      phi = np.arctan2(y, x)
+      return(rho, phi)
+  
+  def pol2cart(rho, phi):
+      x = rho * np.cos(phi)
+      y = rho * np.sin(phi)
+      return(x, y)
+
+      
+  gamma=cart2pol(node.pose[X]-rad_pos[0],node.pose[Y]-rad_pos[1])
+  theta=cart2pol(final_node.pose[X]-rad_pos[0],final_node.pose[Y]-rad_pos[1])
+  
+  #print('thetas',theta, gamma,np.rad2deg(theta),np.rad2deg(gamma))
+
+  iterator=0
+  min_angle=np.sort([gamma, theta])[0]
+  
+  angle=min_angle[0]
+
+  global_x=0
+  global_y=0
+ # print(min_angle)
+
+  angle_1=np.arctan2(node.pose[Y]-rad_pos[1],node.pose[X]-rad_pos[0])
+  angle_2=np.arctan2(final_node.pose[Y]-rad_pos[1],final_node.pose[X]-rad_pos[0])
+
+  interp=np.linspace(angle_1, angle_2)
+
+  print('ANGLES', angle_1, angle_2)
+
+  for i in interp:
+      x=rad_len*np.cos(i)-rad_pos[0]
+      y=rad_len*np.sin(i)-rad_pos[1]
+      
+      print('yo',x,y,'i',i)
+      available=occupancy_grid.is_free([x,y])
+      if(not available):
+          print('not valid')
+          return None
+      #angle+=0.01
+      print(iterator, available)
+      iterator+=1
+      global_x=x
+      global_y=y
+    
+  # return
+  # 
+  # while(angle<min_angle[1]):
+    # #print('running')
+    # # rho=rad_len*np.cos(angle)
+    # # phi=rad_len*np.sin(angle)
+    # #
+    # # cart_coord=pol2cart(rho,phi)
+    # # x=cart_coord[0]+rad_pos[0]
+    # # y=cart_coord[0]+rad_pos[1]
+    # x=rad_len*np.cos(angle)+rad_pos[0]
+    # y=rad_len*np.sin(angle)+rad_pos[1]
+    # 
+    # print('yo',x,y, angle,np.rad2deg(angle))
+    # available=occupancy_grid.is_free([x,y])
+    # if(not available):
+        # print('not valid')
+        # return None
+    # angle+=0.01
+    # print(iterator, available)
+    # iterator+=1
+    # global_x=x
+    # global_y=y
+# 
+  # print('valid')
+  
+
+
+  #calc direction and angle
+  direction=[final_position[X]-curr_pose[X],final_position[Y]-curr_pose[Y]]
+  #magnitude=np.sqrt((direction[X]**2)+(direction[Y]**2))
+  theta_fin=np.arctan(direction[Y]/direction[X])
+
+  if(DEBUG):
+    print(direction, magnitude, theta)
+    print('final_pos',final_position)
+    print('curr_pos',curr_pose)
+    print('final_node yaw',final_node.yaw)
+
   # MISSING: Check whether there exists a simple path that links node.pose
   # to final_position. This function needs to return a new node that has
   # the same position as final_position and a valid yaw. The yaw is such that
@@ -98,9 +194,19 @@ def adjust_pose(node, final_position, occupancy_grid):
   # adjusted final pose. If no such arc exists (e.g., collision) return None.
   # Assume that the robot always goes forward.
   # Feel free to use the find_circle() function below.
+  direct=[final_position[X]-global_x,final_position[Y]-global_y]
+  #magnitude=np.sqrt((direction[X]**2)+(direction[Y]**2))
+ # theta_fin=np.arctan(direct[Y]/direct[X])
 
-  print('final_node yaw',final_node.yaw)
-  final_node.pose[YAW]=1 #+np.random.uniform(-.01,.01)
+
+  final_node.pose[YAW]=theta_fin#np.deg2rad(min_angle[1])
+ # final_node.pose[X]=global_x#rad_len*np.cos(np.rad2deg(min_angle[1]))
+ # final_node.pose[Y]=global_y#rad_len*np.sin(np.rad2deg(min_angle[1]))
+
+ # print(final_node.pose)
+  #final_node.pose[YAW]=0
+
+  
 
   return final_node
 
