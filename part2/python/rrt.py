@@ -80,114 +80,62 @@ def adjust_pose(node, final_position, occupancy_grid):
   curr_pose=node.pose[:2]
   
   DEBUG=False
-  
+
+
+  ##get the fitted circle from the find_circle
   new_node=find_circle(node, final_node)[0]
-  
   node_rad=find_circle(node, final_node)
-  
+
+  ##get the circles center positoin and radius
   rad_pos=node_rad[0]
   rad_len=node_rad[1]
 
-  def cart_to_polar(node):
-    r=np.sqrt(node[X]**2+node[Y]**2)
-
-    dx=0-node[X]
-    dy=0-node[Y]
-
-    polar_angle= np.arctan2(-dy,-dx)
-    
-    #polar_angle=np.arctan(node[Y]/node[X])
-    #[r, np.rad2deg(polar_angle)]
-    return [r, polar_angle]
-
-
+##converts cartesian to polar
   def cart2pol(x, y):
       rho = np.sqrt(x**2 + y**2)
       phi = np.arctan2(y, x)
       return(rho, phi)
-  
+
+  #converts polar to cartesian
   def pol2cart(rho, phi):
       x = rho * np.cos(phi)
       y = rho * np.sin(phi)
       return(x, y)
 
+#get perpendicualr vector for another vector
+  def perpendicular(a):
+    b=np.empty_like(a)
+    b[0]=-a[1]
+    b[1]=a[0]
+    return b
 
-    ##or rever x and y   
-  gamma=cart2pol(node.pose[X]-rad_pos[0],node.pose[Y]-rad_pos[1])
-  theta=cart2pol(final_node.pose[X]-rad_pos[0],final_node.pose[Y]-rad_pos[1])
+  #get the center offset to transform the circle to 0.0 so we can use polar coords
+  x_offset=rad_pos[X]
+  y_offset=rad_pos[Y]
+
+  #transform the two given node points to 0,0
+  cart_coords_A=cart2pol(curr_pose[X]-x_offset,curr_pose[Y]-y_offset)
+  cart_coords_B=cart2pol(final_position[X]-x_offset,final_position[Y]-y_offset)
+
+  #get the polar angles for the two given points
+  angle_A=cart_coords_A[1]
+  angle_B=cart_coords_B[1]
+
+  ##interpolate 20 steps inbetween the two angles
+  interp=np.linspace(angle_A, angle_B, 20)
+
+    #check the dot positions using the interpolated angles
+    #here we use polar coordinates so it's easier to calculate i
+  for angle in interp:
+  ##transform polar to cartesian + remove the offset so  so we check it's real location
+    cart_xy=pol2cart(rad_len, angle)+rad_pos
+    #check if the real location is frees
+    available=occupancy_grid.is_free(cart_xy)
+    print(angle, cart_xy, available)
+    if(not available):
+        return None
   
-  #print('thetas',theta, gamma,np.rad2deg(theta),np.rad2deg(gamma))
-
-  iterator=0
-  min_angle=np.sort([gamma, theta])[0]
-  
-  angle=min_angle[0]
-
-  global_x=0
-  global_y=0
- # print(min_angle)
-
-  angle_1=np.arctan2(node.pose[X]-rad_pos[0],node.pose[Y]-rad_pos[1])
-  angle_2=np.arctan2(final_node.pose[X]-rad_pos[0],final_node.pose[Y]-rad_pos[1])
-
-  interp=np.linspace(angle_1, angle_2)
-
-  print('ANGLES', angle_1, angle_2)
-
-  for i in interp:
-      x=rad_len*np.cos(i)+rad_pos[0]
-      y=rad_len*np.sin(i)+rad_pos[1]
-      
-      print('yo',x,y,'i',i)
-      available=occupancy_grid.is_free([x,y])
-      if(not available):
-          print('not valid')
-          return None
-      #angle+=0.01
-      print(iterator, available)
-      iterator+=1
-      global_x=x
-      global_y=y
-    
-  # return
-  # 
-  # while(angle<min_angle[1]):
-    # #print('running')
-    # # rho=rad_len*np.cos(angle)
-    # # phi=rad_len*np.sin(angle)
-    # #
-    # # cart_coord=pol2cart(rho,phi)
-    # # x=cart_coord[0]+rad_pos[0]
-    # # y=cart_coord[0]+rad_pos[1]
-    # x=rad_len*np.cos(angle)+rad_pos[0]
-    # y=rad_len*np.sin(angle)+rad_pos[1]
-    # 
-    # print('yo',x,y, angle,np.rad2deg(angle))
-    # available=occupancy_grid.is_free([x,y])
-    # if(not available):
-        # print('not valid')
-        # return None
-    # angle+=0.01
-    # print(iterator, available)
-    # iterator+=1
-    # global_x=x
-    # global_y=y
-# 
-  # print('valid')
-  
-
-
-  #calc direction and angle
-  direction=[final_position[X]-curr_pose[X],final_position[Y]-curr_pose[Y]]
-  #magnitude=np.sqrt((direction[X]**2)+(direction[Y]**2))
-  theta_fin=np.arctan(direction[Y]/direction[X])
-
-  if(DEBUG):
-    print(direction, magnitude, theta)
-    print('final_pos',final_position)
-    print('curr_pos',curr_pose)
-    print('final_node yaw',final_node.yaw)
-
+ 
   # MISSING: Check whether there exists a simple path that links node.pose
   # to final_position. This function needs to return a new node that has
   # the same position as final_position and a valid yaw. The yaw is such that
@@ -195,12 +143,15 @@ def adjust_pose(node, final_position, occupancy_grid):
   # adjusted final pose. If no such arc exists (e.g., collision) return None.
   # Assume that the robot always goes forward.
   # Feel free to use the find_circle() function below.
-  direct=[final_position[X]-global_x,final_position[Y]-global_y]
-  #magnitude=np.sqrt((direction[X]**2)+(direction[Y]**2))
- # theta_fin=np.arctan(direct[Y]/direct[X])
+
+ #get the vector direction from centre to point B(final_pos)
+  CB_dir=[final_position[X]-rad_pos[X],final_position[Y]-rad_pos[Y]]
+  #CB_perp=perpendicular(CB_dir) #didn't work
+  #calculate the yaw
+  theta=np.arctan(CB_dir[Y]/CB_dir[X])
 
 
-  final_node.pose[YAW]=theta_fin#np.deg2rad(min_angle[1])
+  final_node.pose[YAW]=0#1#theta_fin#np.deg2rad(min_angle[1])
  # final_node.pose[X]=global_x#rad_len*np.cos(np.rad2deg(min_angle[1]))
  # final_node.pose[Y]=global_y#rad_len*np.sin(np.rad2deg(min_angle[1]))
 
