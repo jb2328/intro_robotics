@@ -33,7 +33,7 @@ GOAL_POSITION = np.array([1.5, 1.5], dtype=np.float32)
 MAX_SPEED = .5
 EPSILON = .2
 
-USE_RELATIVE_POSITIONS = False
+USE_RELATIVE_POSITIONS = True
 
 X = 0
 Y = 1
@@ -48,32 +48,39 @@ def feedback_linearized(pose, velocity, epsilon):
   # vector given as argument. Epsilon corresponds to the distance of
   # linearized point in front of the robot.
 
-  print('pose',pose)
-  print('velocity', velocity)
+  #get the yaw
+  theta=pose[YAW]
 
-  x=velocity[0]
-  y=velocity[1]
-  theta=pose[1]
+  #get the x sub p and y sub p:
+  xp=velocity[0]
+  yp=velocity[1]
 
-  xp=x+epsilon*np.cos(theta)
-  yp=y+epsilon*np.sin(theta)
-
-  #xp=x+epsilon*(-theta*np.sin(theta))
-  #yp=y+epsilon*( theta*np.cos(theta))
-    
+  #get the u and omega
   u=xp*np.cos(theta)+yp*np.sin(theta)
   w=pow(epsilon, -1)*(-xp*np.sin(theta)+yp*np.cos(theta))
 
+  
   return u, w
 
 
 def get_relative_position(absolute_pose, absolute_position):
-  relative_position = absolute_position.copy()
+  #relative_position = absolute_position.copy()
+  relative_position=np.ones(3)
+  relative_position[:2]=absolute_position[:2]
 
   # MISSING: Compute the relative position of absolute_position in the
   # coordinate frame defined by absolute_pose.
 
-  return relative_position
+  theta=-absolute_pose[YAW]
+  
+  transform = np.array([
+    [np.cos(theta), -np.sin(theta), -absolute_pose[X]],
+    [np.sin(theta), np.cos(theta) , -absolute_pose[Y]],
+    [0            ,0              ,                 1]
+  ])
+  
+
+  return np.matmul(transform, relative_position)[:2]#relative_position
 
 
 class GroundtruthPose(object):

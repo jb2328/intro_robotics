@@ -111,7 +111,8 @@ def adjust_pose(node, final_position, occupancy_grid):
       y = rho * np.sin(phi)
       return(x, y)
 
-      
+
+    ##or rever x and y   
   gamma=cart2pol(node.pose[X]-rad_pos[0],node.pose[Y]-rad_pos[1])
   theta=cart2pol(final_node.pose[X]-rad_pos[0],final_node.pose[Y]-rad_pos[1])
   
@@ -126,16 +127,16 @@ def adjust_pose(node, final_position, occupancy_grid):
   global_y=0
  # print(min_angle)
 
-  angle_1=np.arctan2(node.pose[Y]-rad_pos[1],node.pose[X]-rad_pos[0])
-  angle_2=np.arctan2(final_node.pose[Y]-rad_pos[1],final_node.pose[X]-rad_pos[0])
+  angle_1=np.arctan2(node.pose[X]-rad_pos[0],node.pose[Y]-rad_pos[1])
+  angle_2=np.arctan2(final_node.pose[X]-rad_pos[0],final_node.pose[Y]-rad_pos[1])
 
   interp=np.linspace(angle_1, angle_2)
 
   print('ANGLES', angle_1, angle_2)
 
   for i in interp:
-      x=rad_len*np.cos(i)-rad_pos[0]
-      y=rad_len*np.sin(i)-rad_pos[1]
+      x=rad_len*np.cos(i)+rad_pos[0]
+      y=rad_len*np.sin(i)+rad_pos[1]
       
       print('yo',x,y,'i',i)
       available=occupancy_grid.is_free([x,y])
