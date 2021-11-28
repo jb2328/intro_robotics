@@ -43,32 +43,21 @@ def sample_random_position(occupancy_grid):
   is_occupied=True
   is_free=False
 
- 
-# 
-  # new_xy=[x,y]
-# 
-  # if x==0 or y==0:
-    # return sample_random_position(occupancy_grid)
-# 
-  # if occupancy_grid.is_free(new_xy):
-    # return new_xy
-  # return sample_random_position(occupancy_grid)
+  #enter while loop which makes sure that the generated positions are valid
   while(not is_free):
-     # gen_pos=np.random.randint(0,383,2)
-      #x=np.random.uniform(-2,2)
-      #y=np.random.uniform(-2,2)
-      
-      pos=np.random.uniform(-2,2,2)#[x,y]#occupancy_grid.get_position(x, y)
+
+    #generate random positions that fit within the arena
+      pos=np.random.uniform(-2,2,2)
 
       if(DEBUG):
-       # print('generatead', gen_pos)
         print('grid pos', pos)
 
-      is_free=occupancy_grid.is_free(pos)
-      is_occupied=occupancy_grid.is_occupied(pos)
+    #check the occupancy grid functions
+      is_free=occupancy_grid.is_free(pos) 
+      #is_occupied=occupancy_grid.is_occupied(pos) redundant
 
-      if (is_occupied):
-        break
+      if (is_free):
+        break # 
 
       if(DEBUG):
         print('not free try again')
@@ -76,11 +65,6 @@ def sample_random_position(occupancy_grid):
   if(DEBUG):
      print('success, it was free')
 
-
- 
-
-  #print(occupancy_grid._values[rand_x, rand_y])
-  #pos=np.random.uniform(-2,2,)
   
   return pos
 
@@ -94,19 +78,17 @@ def adjust_pose(node, final_position, occupancy_grid):
   
   DEBUG=False
 
+#######################################################
+################## HELPER FUNCTIONS ###################
+######################################################
 
-
-  #if(node.pose[YAW])== 0:
-  #  return None
-  
-  print('node_gradient', node.position,node.yaw, final_position)
-
+#finds midpoint coordinates between two nodes
   def find_midpoint(node_a, node_b):
     midpoint=(node_a[X]+node_b[X])/2,(node_a[Y]+node_b[Y])/2
     return midpoint
 
-
-
+#finds the line's gradient
+#if y=mx+c, this function returns the gradient m
   def find_gradient(pos1, pos2):
     x1=pos1[X]
     y1=pos1[Y]
@@ -114,6 +96,7 @@ def adjust_pose(node, final_position, occupancy_grid):
     x2=pos2[X]
     y2=pos2[Y]
 
+    #edge case one, no line present
     if(x1==x2):
         print('infinite gradient, error')
         return np.inf
@@ -121,70 +104,114 @@ def adjust_pose(node, final_position, occupancy_grid):
         print('finding gradient', x1,x2,y1,y2)
         return (y2-y1)/(x2-x1)
 
-
+#finds a perpendicular line
   def find_perpendicular(gradient):
+    #edge case one, no gradient just a constant
     if(gradient==0):
         print('infinite gradient, error')
         return np.inf
+     #edge case one, gradient is infinite, set gradient to constant
     elif gradient==np.inf:
         print('infinite gradient, error')
         return 0
-    else:
+    else:#the usual
         return -1/gradient
 
+#fins the intersect positions between two points
   def find_intersect(m1,m2,c1,c2):
 
+    #edge case one, constant1 is  infinite, set it to 0 aka no constant
     if c1[0] ==np.inf:
         x=c1[1]#or just 0
         return [x, m2*x+c2[0]]
+     #edge case two, constant2 is infinite, set it to 0 aka no constant
     elif c2[0]==np.inf:
         x=c2[1] #or just 0
         return [x, m1*x+c1[0]]
-    else:
+    else:#the usual
         print('intersect', [m1,m2,c1,c2])
         x=(c2[0]-c1[0])/(m1-m2)
         y=m1*x+c1[0]
 
     return [x,y]
 
+#finds the constant of a straight line
+#if y=mx+c
+#returns an array of values to deal with edge cases
   def find_c(node, gradient):
+    #edge case one, the gradient is infinite, the array has node's X position
     if (gradient==np.inf):
         return [np.inf, node[X]]
-    else:
+    else:#the usual
         y=node[Y]
         x=node[X]
         m=gradient
     return [y-m*x,0]
-  ############################################################
 
+
+##converts cartesian to polar
+  def cart2pol(x, y):
+      rho = np.sqrt(x**2 + y**2)
+      phi = np.arctan2(y, x)
+      return(rho, phi)
+
+  #converts polar to cartesian
+  def pol2cart(rho, phi):
+      x = rho * np.cos(phi)
+      y = rho * np.sin(phi)
+      return(x, y)
+
+#get perpendicualr vector for another vector
+  def perpendicular(a):
+    b=np.empty_like(a)
+    b[0]=-a[1]
+    b[1]=a[0]
+    return b
+ ############################################################
+#######################################################
+
+#in steps 1-7 we try to get the coordinates of the circle that has start and finish 
+#nodes on it's circumference.
+
+#step 1 get the midpoint between the start S and finish F nodes
   midpoint=find_midpoint(node.position, final_position)
 
+#step 2 get the gradient of the line connecting nodes S and F
   gradient_line_1=find_gradient(node.position, final_position)
+
+#step 3 find a line that perpendicular to the line connecting S and F
   gradient_line_2=find_perpendicular(gradient_line_1)
 
+#step 4 find the constant of the perpendicular line to S and F at the midpoint
   c2=find_c(midpoint,gradient_line_2)
 
+#get the S node's yaw
   node_gradient=np.tan(node.yaw)
 
-  print('hello')
-  print('node_yaw', node.yaw)
-  print('node_gradient', node_gradient)
-  
+#step 5 find a line that#s perpendicular to S's yaw
   gradient_line_3=find_perpendicular(node_gradient)
-  print('perpendicular', gradient_line_3)
 
+#step 6 find the constant of the perpendicular line to the node's S yaw
   c3=find_c(node.position,gradient_line_3)
 
+#step 7 -now that we check where the line passing through the midpoint (perpendicularly)
+#intersects with the line that's perpendiculat to S node's yaw.
+#this will give the center coordinates of the circle C that's passing throught 
+#S and F
   center_circle=find_intersect(gradient_line_2, gradient_line_3, c2,c3)
-  print('center circle',center_circle)
+
+#in steps  8-10 we get the F node's yaw
+
+#step8, get the gradient of the line C-F
   gradient_line_4=find_gradient(center_circle, final_position)
+#step 9, get the gradient of the line perpendicular to CF
   gradient_final=find_perpendicular(gradient_line_4)
 
 
 ##the direction of the perpendicular vector to center circle and final pos
   du=node.position-center_circle
 
-#cross product of the finish and start direction
+#step 10, get the cross product of the finish and start vectors
   if np.cross(node.direction, du).item()>0: 
   
        if  (final_position[0]-center_circle[0])>=0 and (final_position[1]-center_circle[1])>=0:
@@ -220,36 +247,22 @@ def adjust_pose(node, final_position, occupancy_grid):
             return None
             print("NaN")
 
+#update the pose
   final_node.pose[X]=final_position[0]
   final_node.pose[Y]=final_position[1]
 
+#angle C-S
   theta1=np.arctan2(du[1], du[0])
-  print('HERE',final_position, center_circle)
   dv=final_position-center_circle
 
+#angle C-F
   theta2=np.arctan2(dv[1], dv[0])
+  
+#angle S-C-F
   theta_delta=np.absolute(theta1-theta2)
 
   ###########################################################
 
-##converts cartesian to polar
-  def cart2pol(x, y):
-      rho = np.sqrt(x**2 + y**2)
-      phi = np.arctan2(y, x)
-      return(rho, phi)
-
-  #converts polar to cartesian
-  def pol2cart(rho, phi):
-      x = rho * np.cos(phi)
-      y = rho * np.sin(phi)
-      return(x, y)
-
-#get perpendicualr vector for another vector
-  def perpendicular(a):
-    b=np.empty_like(a)
-    b[0]=-a[1]
-    b[1]=a[0]
-    return b
 
  ##get the fitted circle from the find_circle
   new_node=find_circle(node, final_node)[0]
@@ -274,8 +287,8 @@ def adjust_pose(node, final_position, occupancy_grid):
   ##interpolate 20 steps inbetween the two angles
   interp=np.linspace(angle_A, angle_B, 20)
 
-    #check the dot positions using the interpolated angles
-    #here we use polar coordinates so it's easier to calculate i
+  #check the dot positions using the interpolated angles
+  #here we use polar coordinates so it's easier to calculate i
   for angle in interp:
   ##transform polar to cartesian + remove the offset so  so we check it's real location
     cart_xy=pol2cart(rad_len, angle)+rad_pos
