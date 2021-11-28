@@ -71,15 +71,17 @@ def get_relative_position(absolute_pose, absolute_position):
   # MISSING: Compute the relative position of absolute_position in the
   # coordinate frame defined by absolute_pose.
 
+##get the robot's theta value
   theta=-absolute_pose[YAW]
-  
+
+  ##get a simple transformation from what we've een in slides
   transform = np.array([
     [np.cos(theta), -np.sin(theta), -absolute_pose[X]],
     [np.sin(theta), np.cos(theta) , -absolute_pose[Y]],
     [0            ,0              ,                 1]
   ])
   
-
+##apply the transformation to the relative position
   return np.matmul(transform, relative_position)[:2]#relative_position
 
 

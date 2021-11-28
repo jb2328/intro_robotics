@@ -38,7 +38,7 @@ def sample_random_position(occupancy_grid):
   #meaning one side is 384 pixels
 
  # position=np.random.uniform(-2.5,2.5,2)
-  DEBUG=True
+  DEBUG=False
   
   is_occupied=True
   is_free=False
@@ -98,21 +98,21 @@ def adjust_pose(node, final_position, occupancy_grid):
 
     #edge case one, no line present
     if(x1==x2):
-        print('infinite gradient, error')
+        #print('infinite gradient, error')
         return np.inf
     else:
-        print('finding gradient', x1,x2,y1,y2)
+        #print('finding gradient', x1,x2,y1,y2)
         return (y2-y1)/(x2-x1)
 
 #finds a perpendicular line
   def find_perpendicular(gradient):
     #edge case one, no gradient just a constant
     if(gradient==0):
-        print('infinite gradient, error')
+        #print('infinite gradient, error')
         return np.inf
      #edge case one, gradient is infinite, set gradient to constant
     elif gradient==np.inf:
-        print('infinite gradient, error')
+        #print('infinite gradient, error')
         return 0
     else:#the usual
         return -1/gradient
@@ -129,7 +129,7 @@ def adjust_pose(node, final_position, occupancy_grid):
         x=c2[1] #or just 0
         return [x, m1*x+c1[0]]
     else:#the usual
-        print('intersect', [m1,m2,c1,c2])
+        #print('intersect', [m1,m2,c1,c2])
         x=(c2[0]-c1[0])/(m1-m2)
         y=m1*x+c1[0]
 
@@ -294,7 +294,7 @@ def adjust_pose(node, final_position, occupancy_grid):
     cart_xy=pol2cart(rad_len, angle)+rad_pos
     #check if the real location is frees
     available=occupancy_grid.is_free(cart_xy)
-    print(angle, cart_xy, available)
+    #print(angle, cart_xy, available)
     if(not available):
         return None
   
@@ -307,7 +307,7 @@ def adjust_pose(node, final_position, occupancy_grid):
   # Assume that the robot always goes forward.
   # Feel free to use the find_circle() function below.
 
-
+  #final_node.pose[YAW]=0
   return final_node
 
 

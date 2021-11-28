@@ -40,7 +40,18 @@ X = 0
 Y = 1
 YAW = 2
 
+# 
+# def feedback_linearized(pose, velocity, epsilon):
+  # u = 0.  # [m/s]
+  # w = 0.  # [rad/s] going counter-clockwise.
+# 
+  # # MISSING: Implement feedback-linearization to follow the velocity
+  # # vector given as argument. Epsilon corresponds to the distance of
+  # # linearized point in front of the robot.
+# 
+  # return u, w
 
+##pasted from exercise 2:
 def feedback_linearized(pose, velocity, epsilon):
   u = 0.  # [m/s]
   w = 0.  # [rad/s] going counter-clockwise.
@@ -48,6 +59,17 @@ def feedback_linearized(pose, velocity, epsilon):
   # MISSING: Implement feedback-linearization to follow the velocity
   # vector given as argument. Epsilon corresponds to the distance of
   # linearized point in front of the robot.
+
+  #get the yaw
+  theta=pose[YAW]
+
+  #get the x sub p and y sub p:
+  xp=velocity[0]
+  yp=velocity[1]
+
+  #get the u and omega
+  u=xp*np.cos(theta)+yp*np.sin(theta)
+  w=pow(epsilon, -1)*(-xp*np.sin(theta)+yp*np.cos(theta))
 
   return u, w
 
@@ -63,6 +85,33 @@ def get_velocity(position, path_points):
   # MISSING: Return the velocity needed to follow the
   # path defined by path_points. Assume holonomicity of the
   # point located at position.
+
+  print('path len',len(path_points))
+
+  #set the n'th positoin on the line to follow
+  #in this case I set it to 5 but it get's adjusted if the line has fewer than 5 entries
+  n=7
+  
+  if(len(path_points)>n):
+    current_target=path_points[n]
+  else:
+    current_target=path_points[0]
+  print('ct',current_target)
+
+  dist=np.sqrt((current_target[0]-position[0])**2+(current_target[1]-position[1])**2)
+  print('DIST',dist)
+
+  k=1.25
+  v=(current_target-position)*k
+
+  
+  #v=v
+  print('current v',v)
+  #print('position', position)
+  
+  #print('path points', path_points[0])
+
+  #v+=0.1
 
   return v
 
@@ -172,7 +221,7 @@ def get_path(final_node):
     offset = distance - (theta2 - angles[-1]) * radius
     points_x.extend(center[X] + np.cos(angles) * radius)
     points_y.extend(center[Y] + np.sin(angles) * radius)
-  return zip(points_x, points_y)
+  return list(zip(points_x, points_y))
   
 
 def run(args):
