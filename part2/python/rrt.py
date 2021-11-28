@@ -38,19 +38,30 @@ def sample_random_position(occupancy_grid):
   #meaning one side is 384 pixels
 
  # position=np.random.uniform(-2.5,2.5,2)
-  DEBUG=False
+  DEBUG=True
   
   is_occupied=True
   is_free=False
 
-  
+ 
+# 
+  # new_xy=[x,y]
+# 
+  # if x==0 or y==0:
+    # return sample_random_position(occupancy_grid)
+# 
+  # if occupancy_grid.is_free(new_xy):
+    # return new_xy
+  # return sample_random_position(occupancy_grid)
   while(not is_free):
-      gen_pos=np.random.randint(0,383,2)
+     # gen_pos=np.random.randint(0,383,2)
+      #x=np.random.uniform(-2,2)
+      #y=np.random.uniform(-2,2)
       
-      pos=occupancy_grid.get_position(gen_pos[X], gen_pos[Y])
+      pos=np.random.uniform(-2,2,2)#[x,y]#occupancy_grid.get_position(x, y)
 
       if(DEBUG):
-        print('generatead', gen_pos)
+       # print('generatead', gen_pos)
         print('grid pos', pos)
 
       is_free=occupancy_grid.is_free(pos)
@@ -60,10 +71,12 @@ def sample_random_position(occupancy_grid):
         break
 
       if(DEBUG):
-        print('not free try again') 
+        print('not free try again')
 
-  if(DEBUG):               
+  if(DEBUG):
      print('success, it was free')
+
+
  
 
   #print(occupancy_grid._values[rand_x, rand_y])
@@ -82,13 +95,141 @@ def adjust_pose(node, final_position, occupancy_grid):
   DEBUG=False
 
 
-  ##get the fitted circle from the find_circle
-  new_node=find_circle(node, final_node)[0]
-  node_rad=find_circle(node, final_node)
 
-  ##get the circles center positoin and radius
-  rad_pos=node_rad[0]
-  rad_len=node_rad[1]
+  #if(node.pose[YAW])== 0:
+  #  return None
+  
+  print('node_gradient', node.position,node.yaw, final_position)
+
+  def find_midpoint(node_a, node_b):
+    midpoint=(node_a[X]+node_b[X])/2,(node_a[Y]+node_b[Y])/2
+    return midpoint
+
+
+
+  def find_gradient(pos1, pos2):
+    x1=pos1[X]
+    y1=pos1[Y]
+
+    x2=pos2[X]
+    y2=pos2[Y]
+
+    if(x1==x2):
+        print('infinite gradient, error')
+        return np.inf
+    else:
+        print('finding gradient', x1,x2,y1,y2)
+        return (y2-y1)/(x2-x1)
+
+
+  def find_perpendicular(gradient):
+    if(gradient==0):
+        print('infinite gradient, error')
+        return np.inf
+    elif gradient==np.inf:
+        print('infinite gradient, error')
+        return 0
+    else:
+        return -1/gradient
+
+  def find_intersect(m1,m2,c1,c2):
+
+    if c1[0] ==np.inf:
+        x=c1[1]#or just 0
+        return [x, m2*x+c2[0]]
+    elif c2[0]==np.inf:
+        x=c2[1] #or just 0
+        return [x, m1*x+c1[0]]
+    else:
+        print('intersect', [m1,m2,c1,c2])
+        x=(c2[0]-c1[0])/(m1-m2)
+        y=m1*x+c1[0]
+
+    return [x,y]
+
+  def find_c(node, gradient):
+    if (gradient==np.inf):
+        return [np.inf, node[X]]
+    else:
+        y=node[Y]
+        x=node[X]
+        m=gradient
+    return [y-m*x,0]
+  ############################################################
+
+  midpoint=find_midpoint(node.position, final_position)
+
+  gradient_line_1=find_gradient(node.position, final_position)
+  gradient_line_2=find_perpendicular(gradient_line_1)
+
+  c2=find_c(midpoint,gradient_line_2)
+
+  node_gradient=np.tan(node.yaw)
+
+#  if node_gradient ==0:
+ #   return None
+
+  print('hello')
+  print('node_yaw', node.yaw)
+  print('node_gradient', node_gradient)
+  
+  gradient_line_3=find_perpendicular(node_gradient)
+  print('perpendicular', gradient_line_3)
+
+ # if gradient_line_3==np.inf:
+ #   return None
+  c3=find_c(node.position,gradient_line_3)
+
+  center_circle=find_intersect(gradient_line_2, gradient_line_3, c2,c3)
+  print('center circle',center_circle)
+  gradient_line_4=find_gradient(center_circle, final_position)
+  gradient_final=find_perpendicular(gradient_line_4)
+
+  du=node.position-center_circle
+
+  if np.cross(node.direction, du).item() >0: #.
+       if(final_position[0]-center_circle[0]>=0 and (final_position[1]-center_circle[1]))>=0:
+            final_node.pose[YAW] = np. arctan(np.absolute(gradient_final))
+
+       elif(final_position[0]-center_circle[0]) >=0 and (final_position[1]-center_circle[1])<0:
+            final_node.pose[YAW]=np.pi+np.arctan(gradient_final)
+
+       elif(final_position[0]-center_circle[0]) <0 and (final_position[1]-center_circle[1])<0:
+            final_node.pose[YAW]=np.pi - np.arctan(np.absolute(gradient_final))
+
+       elif(final_position[0]-center_circle[0])<0 and (final_position[1]-center_circle[1])>=0:
+            final_node.pose[YAW]=np.arctan(gradient_final)
+
+       else:
+            print("NaN")
+
+  else:
+        if(final_position[0]-center_circle[0]>=0 and (final_position[1]-center_circle[1]))>=0:
+            final_node.pose[YAW] = np.pi - np. arctan(np.absolute(gradient_final))
+
+        elif(final_position[0]-center_circle[0]) >=0 and (final_position[1]-center_circle[1])<0:
+            final_node.pose[YAW]=np.arctan(gradient_final)
+
+        elif(final_position[0]-center_circle[0]) <0 and (final_position[1]-center_circle[1])<0:
+            final_node.pose[YAW]=np.arctan(np.absolute(gradient_final))
+
+        elif(final_position[0]-center_circle[0])<0 and (final_position[1]-center_circle[1])>=0:
+            final_node.pose[YAW]=np.pi+np.arctan(gradient_final)
+
+        else:
+            print("NaN")
+
+  #final_node.pose[X]=final_position[0]
+  #final_node.pose[Y]=final_position[1]
+
+  theta1=np.arctan2(du[1], du[0])
+  print('HERE',final_position, center_circle)
+  dv=final_position-center_circle
+
+  theta2=np.arctan2(dv[1], dv[0])
+  theta_delta=np.absolute(theta1-theta2)
+
+  ###########################################################
 
 ##converts cartesian to polar
   def cart2pol(x, y):
@@ -109,12 +250,20 @@ def adjust_pose(node, final_position, occupancy_grid):
     b[1]=a[0]
     return b
 
+ ##get the fitted circle from the find_circle
+  new_node=find_circle(node, final_node)[0]
+  node_rad=find_circle(node, final_node)
+
+  ##get the circles center positoin and radius
+  rad_pos=node_rad[0]
+  rad_len=node_rad[1]
+  
   #get the center offset to transform the circle to 0.0 so we can use polar coords
-  x_offset=rad_pos[X]
-  y_offset=rad_pos[Y]
+  x_offset=center_circle[X]
+  y_offset=center_circle[Y]
 
   #transform the two given node points to 0,0
-  cart_coords_A=cart2pol(curr_pose[X]-x_offset,curr_pose[Y]-y_offset)
+  cart_coords_A=cart2pol(node.pose[X]-x_offset,node.pose[Y]-y_offset)
   cart_coords_B=cart2pol(final_position[X]-x_offset,final_position[Y]-y_offset)
 
   #get the polar angles for the two given points
@@ -151,12 +300,12 @@ def adjust_pose(node, final_position, occupancy_grid):
   theta=np.arctan(CB_dir[Y]/CB_dir[X])
 
 
-  final_node.pose[YAW]=0#1#theta_fin#np.deg2rad(min_angle[1])
+#  final_node.pose[YAW]=theta_delta#1#theta_fin#np.deg2rad(min_angle[1])
  # final_node.pose[X]=global_x#rad_len*np.cos(np.rad2deg(min_angle[1]))
  # final_node.pose[Y]=global_y#rad_len*np.sin(np.rad2deg(min_angle[1]))
 
  # print(final_node.pose)
-  #final_node.pose[YAW]=0
+ # final_node.pose[YAW]=0
 
   
 
