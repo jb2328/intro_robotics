@@ -166,9 +166,6 @@ def adjust_pose(node, final_position, occupancy_grid):
 
   node_gradient=np.tan(node.yaw)
 
-#  if node_gradient ==0:
- #   return None
-
   print('hello')
   print('node_yaw', node.yaw)
   print('node_gradient', node_gradient)
@@ -176,8 +173,6 @@ def adjust_pose(node, final_position, occupancy_grid):
   gradient_line_3=find_perpendicular(node_gradient)
   print('perpendicular', gradient_line_3)
 
- # if gradient_line_3==np.inf:
- #   return None
   c3=find_c(node.position,gradient_line_3)
 
   center_circle=find_intersect(gradient_line_2, gradient_line_3, c2,c3)
@@ -185,42 +180,48 @@ def adjust_pose(node, final_position, occupancy_grid):
   gradient_line_4=find_gradient(center_circle, final_position)
   gradient_final=find_perpendicular(gradient_line_4)
 
+
+##the direction of the perpendicular vector to center circle and final pos
   du=node.position-center_circle
 
-  if np.cross(node.direction, du).item() >0: #.
-       if(final_position[0]-center_circle[0]>=0 and (final_position[1]-center_circle[1]))>=0:
-            final_node.pose[YAW] = np. arctan(np.absolute(gradient_final))
+#cross product of the finish and start direction
+  if np.cross(node.direction, du).item()>0: 
+  
+       if  (final_position[0]-center_circle[0])>=0 and (final_position[1]-center_circle[1])>=0:
+            final_node.pose[YAW]= -np.arctan(np.absolute(gradient_final))
 
-       elif(final_position[0]-center_circle[0]) >=0 and (final_position[1]-center_circle[1])<0:
+       elif(final_position[0]-center_circle[0])>=0 and (final_position[1]-center_circle[1])<0:
             final_node.pose[YAW]=np.pi+np.arctan(gradient_final)
 
-       elif(final_position[0]-center_circle[0]) <0 and (final_position[1]-center_circle[1])<0:
+       elif(final_position[0]-center_circle[0])<0  and (final_position[1]-center_circle[1])<0:
             final_node.pose[YAW]=np.pi - np.arctan(np.absolute(gradient_final))
 
-       elif(final_position[0]-center_circle[0])<0 and (final_position[1]-center_circle[1])>=0:
+       elif(final_position[0]-center_circle[0])<0  and (final_position[1]-center_circle[1])>=0:
             final_node.pose[YAW]=np.arctan(gradient_final)
 
        else:
+            return None
             print("NaN")
 
   else:
-        if(final_position[0]-center_circle[0]>=0 and (final_position[1]-center_circle[1]))>=0:
+        if  (final_position[0]-center_circle[0])>=0 and (final_position[1]-center_circle[1])>=0:
             final_node.pose[YAW] = np.pi - np. arctan(np.absolute(gradient_final))
 
-        elif(final_position[0]-center_circle[0]) >=0 and (final_position[1]-center_circle[1])<0:
-            final_node.pose[YAW]=np.arctan(gradient_final)
+        elif(final_position[0]-center_circle[0])>=0 and (final_position[1]-center_circle[1])<0:
+            final_node.pose[YAW]= np.arctan(gradient_final)
 
-        elif(final_position[0]-center_circle[0]) <0 and (final_position[1]-center_circle[1])<0:
-            final_node.pose[YAW]=np.arctan(np.absolute(gradient_final))
+        elif(final_position[0]-center_circle[0])<0  and (final_position[1]-center_circle[1])<0:
+            final_node.pose[YAW]=-np.arctan(np.absolute(gradient_final))
 
-        elif(final_position[0]-center_circle[0])<0 and (final_position[1]-center_circle[1])>=0:
+        elif(final_position[0]-center_circle[0])<0  and (final_position[1]-center_circle[1])>=0:
             final_node.pose[YAW]=np.pi+np.arctan(gradient_final)
 
         else:
+            return None
             print("NaN")
 
-  #final_node.pose[X]=final_position[0]
-  #final_node.pose[Y]=final_position[1]
+  final_node.pose[X]=final_position[0]
+  final_node.pose[Y]=final_position[1]
 
   theta1=np.arctan2(du[1], du[0])
   print('HERE',final_position, center_circle)
