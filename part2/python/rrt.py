@@ -294,21 +294,6 @@ def adjust_pose(node, final_position, occupancy_grid):
   # Assume that the robot always goes forward.
   # Feel free to use the find_circle() function below.
 
- #get the vector direction from centre to point B(final_pos)
-  CB_dir=[final_position[X]-rad_pos[X],final_position[Y]-rad_pos[Y]]
-  #CB_perp=perpendicular(CB_dir) #didn't work
-  #calculate the yaw
-  theta=np.arctan(CB_dir[Y]/CB_dir[X])
-
-
-#  final_node.pose[YAW]=theta_delta#1#theta_fin#np.deg2rad(min_angle[1])
- # final_node.pose[X]=global_x#rad_len*np.cos(np.rad2deg(min_angle[1]))
- # final_node.pose[Y]=global_y#rad_len*np.sin(np.rad2deg(min_angle[1]))
-
- # print(final_node.pose)
- # final_node.pose[YAW]=0
-
-  
 
   return final_node
 
