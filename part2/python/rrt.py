@@ -54,7 +54,7 @@ def sample_random_position(occupancy_grid):
 
     #check the occupancy grid functions
       is_free=occupancy_grid.is_free(pos) 
-      #is_occupied=occupancy_grid.is_occupied(pos) redundant
+      is_occupied=occupancy_grid.is_occupied(pos) 
 
       if (is_free):
         break # 
